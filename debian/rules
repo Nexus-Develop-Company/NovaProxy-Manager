@@ -1,3 +1,24 @@
 #!/usr/bin/make -f
+
 %:
 	dh $@ --with python3
+
+override_dh_auto_install:
+	python3 setup.py install \
+		--root=$(CURDIR)/debian/novapm \
+		--install-layout=deb \
+		--no-compile
+	# Desktop file
+	install -Dm644 data/novapm.desktop $(CURDIR)/debian/novapm/usr/share/applications/novapm.desktop
+	# Hicolor PNGs
+	for dir in data/icons/hicolor/*/; do \
+		size=$$(basename $$dir); \
+		install -Dm644 $${dir}apps/novapm.png $(CURDIR)/debian/novapm/usr/share/icons/hicolor/$${size}/apps/novapm.png; \
+	done
+	# On/Off at 256
+	install -Dm644 data/icons/hicolor/256x256/apps/novapm-on.png $(CURDIR)/debian/novapm/usr/share/icons/hicolor/256x256/apps/novapm-on.png
+	install -Dm644 data/icons/hicolor/256x256/apps/novapm-off.png $(CURDIR)/debian/novapm/usr/share/icons/hicolor/256x256/apps/novapm-off.png
+	# SVG scalable
+	install -Dm644 src/proxy_gui/icons/novapm.svg $(CURDIR)/debian/novapm/usr/share/icons/hicolor/scalable/apps/novapm.svg
+	install -Dm644 src/proxy_gui/icons/novapm-on.svg $(CURDIR)/debian/novapm/usr/share/icons/hicolor/scalable/apps/novapm-on.svg
+	install -Dm644 src/proxy_gui/icons/novapm-off.svg $(CURDIR)/debian/novapm/usr/share/icons/hicolor/scalable/apps/novapm-off.svg
