@@ -49,6 +49,8 @@ run:
 
 deb:
 	dpkg-buildpackage -us -uc -b
+	mkdir -p dist
+	mv ../$(APP)_$(VERSION)-1_all.deb dist/ 2>/dev/null || true
 
 clean:
 	rm -rf build/ dist/ *.egg-info/ __pycache__/ src/*/__pycache__/
