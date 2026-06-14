@@ -32,6 +32,9 @@ sudo apt install ./novapm_1.0.0-1_all.deb
 
 ### Desde APT repo
 ```bash
+sudo mkdir -p /usr/share/keyrings
+sudo curl -fsSLo /usr/share/keyrings/novapm.gpg \
+  https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/data/novapm.gpg
 echo "deb [signed-by=/usr/share/keyrings/novapm.gpg] https://nexus-develop-company.github.io/NovaProxy-Manager/apt/ stable main" | sudo tee /etc/apt/sources.list.d/novapm.list
 sudo apt update
 sudo apt install novapm
