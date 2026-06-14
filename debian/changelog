@@ -1,0 +1,18 @@
+proxy-gui (1.1.0-1) unstable; urgency=medium
+
+  * Rediseño completo tipo Proton VPN.
+  * Ventana principal con indicador de estado grande.
+  * Botón toggle ON/OFF.
+  * Acceso a configuración y Acerca de.
+  * Sin dependencia de AppIndicator (funciona en COSMIC/Wayland).
+
+ -- Marcos Santana <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 15:00:00 -0600
+
+proxy-gui (1.0.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * System tray indicator with proxy on/off toggle.
+  * GTK configuration window.
+  * Desktop notifications.
+
+ -- Marcos Santana <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 14:00:00 -0600

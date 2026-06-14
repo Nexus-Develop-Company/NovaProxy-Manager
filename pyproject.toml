@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "novapm"
+version = "1.2.0"
+description = "NovaProxy Manager - Gestor de proxy corporativo con interfaz gráfica"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Marcos Santana", email = "marcosjaviersantana300302@gmail.com"},
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+novapm = "proxy_gui.proxy_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+proxy_gui = ["data/*", "icons/*"]
