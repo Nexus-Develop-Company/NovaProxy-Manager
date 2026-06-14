@@ -2,7 +2,7 @@
 
 PREFIX ?= /usr/local
 APP = novapm
-VERSION = 1.2.0
+VERSION = 1.0.0
 
 install:
 	sudo apt install -y gir1.2-ayatanaappindicator3-0.1 libayatana-appindicator3-1 2>/dev/null; \

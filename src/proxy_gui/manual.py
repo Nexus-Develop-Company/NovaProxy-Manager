@@ -106,7 +106,7 @@ con un solo clic y gestionar múltiples perfiles de configuración.
     - O desactivar y volver a activar el proxy.
 
 
-NovaProxy Manager v1.2.0
+NovaProxy Manager v1.0.0
 """
 
 

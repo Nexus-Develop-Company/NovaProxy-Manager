@@ -1,82 +1,84 @@
-# Proxy GUI
+<p align="center">
+  <img src="src/proxy_gui/icons/novapm.svg" width="96" height="96" alt="NovaProxy Manager">
+</p>
 
-> System tray proxy toggle for Linux. One click to enable/disable your corporate proxy.
+<h1 align="center">NovaProxy Manager</h1>
 
-![Proxy GUI](screenshot.png)
+<p align="center">
+  Gestor de proxy corporativo — interfaz gráfica + línea de comandos
+  <br>
+  <a href="https://github.com/Nexus-Develop-Company/NovaProxy-Manager/wiki">📖 Wiki</a>
+  •
+  <a href="ENGLISH.md">🇬🇧 English</a>
+</p>
 
-## Features
+---
 
-- **System tray icon** — green when proxy is on, red when off
-- **One-click toggle** — left click to enable/disable
-- **Right-click menu** — Activate, Deactivate, Auto-detect, Configure
-- **Configuration window** — edit proxy settings with a GUI
-- **Desktop notifications** — alerts on state changes
-- **Auto-start** — launches on login
+## ✨ Características
 
-## Requirements
+- **Toggle ON/OFF** — activá y desactivá el proxy con un clic
+- **Bandeja del sistema** — icono verde (on) / gris (off), menú contextual con perfiles
+- **Perfiles múltiples** — distintas configuraciones para distintos entornos
+- **Sidebar** — acceso rápido a Configuración, Perfiles, Manual
+- **CLI** — `novapm on`, `novapm off`, `novapm status`
+- **Túnel local** — proxy local con autenticación Basic hacia tu proxy corporativo
 
-- Python 3.10+
-- GTK 3 + AppIndicator (usually pre-installed on Ubuntu/Pop!_OS)
+## ⚡ Instalación rápida
 
+### Desde .deb
 ```bash
-sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 libnotify-bin
+sudo apt install ./novapm_1.0.0-1_all.deb
 ```
 
-## Install
-
-### From PyPI
-
+### Desde APT repo
 ```bash
-pip install --user proxy-gui
+echo "deb [signed-by=/usr/share/keyrings/novapm.gpg] https://nexus-develop-company.github.io/NovaProxy-Manager/apt/ stable main" | sudo tee /etc/apt/sources.list.d/novapm.list
+sudo apt update
+sudo apt install novapm
 ```
 
-### From .deb
-
-Download the latest `.deb` from [Releases](https://github.com/marcossd/proxy-gui/releases).
-
+### Script install.sh
 ```bash
-sudo dpkg -i proxy-gui_1.0.0_all.deb
+bash <(curl -s https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/install.sh)
 ```
 
-### From source
-
+### pipx
 ```bash
-git clone https://github.com/marcossd/proxy-gui.git
-cd proxy-gui
-make install
+pipx install --system-site-packages git+https://github.com/Nexus-Develop-Company/NovaProxy-Manager.git
 ```
 
-## Run
+## 🚀 Uso
 
 ```bash
-proxy-gui
+novapm          # Abre la interfaz gráfica
+novapm on       # Activa el proxy
+novapm off      # Desactiva el proxy
+novapm status   # Muestra el estado
 ```
 
-Or launch from your application menu.
+## 📁 Perfiles
 
-For auto-start on login:
+Creá distintas configuraciones de proxy para diferentes lugares de trabajo. Entrá a **Perfiles** desde el sidebar o la bandeja del sistema.
+
+- **Nuevo**: completá host, puerto, usuario, contraseña y dominios excluidos
+- **Aplicar**: seleccioná un perfil y aplicarlo al instante
+- **Eliminar**: marcá con checkbox y eliminá los que no uses
+
+Los perfiles se guardan en `~/.config/proxy/profiles.json`.
+
+## 📚 Más información
+
+Consultá la [Wiki](https://github.com/Nexus-Develop-Company/NovaProxy-Manager/wiki) para documentación detallada: instalación, configuración, solución de problemas y guía de desarrollo.
+
+## 🛠 Desarrollo
 
 ```bash
-mkdir -p ~/.config/autostart
-cp /usr/local/share/applications/proxy-gui.desktop ~/.config/autostart/
+git clone https://github.com/Nexus-Develop-Company/NovaProxy-Manager.git
+cd NovaProxy-Manager
+make install   # instala con pipx
+make deb       # compila .deb
 ```
 
-## Configuration
+## 📄 Licencia
 
-The app reads and writes `~/.config/proxy/proxy.conf` — the same file used by the [proxy](https://github.com/marcossd/proxy) script.
-
-## How it works
-
-1. **proxy-local.py** — a lightweight Python proxy that listens on `127.0.0.1:3128`
-2. Forwards requests to your corporate proxy with `Proxy-Authorization: Basic`
-3. Your apps connect to `127.0.0.1:3128` without needing credentials
-
-## Build .deb
-
-```bash
-make deb
-```
-
-## License
-
-MIT
+MIT — Nexus Develop Company

@@ -1,4 +1,17 @@
-proxy-gui (1.1.0-1) unstable; urgency=medium
+novapm (1.0.0-1) unstable; urgency=medium
+
+  * Lanzamiento inicial como NovaProxy Manager.
+  * Rebranding completo: proxy-gui → novapm.
+  * Nueva interfaz tipo Proton VPN con sidebar animado.
+  * Sistema de perfiles múltiples.
+  * Manual de usuario integrado.
+  * Soporte completo para COSMIC/Wayland con AyatanaAppIndicator3.
+  * Tray indicator con submenú de perfiles.
+  * CLI: novapm on/off/status.
+
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Sun, 14 Jun 2026 18:00:00 -0600
+
+novapm (1.1.0-1) unstable; urgency=medium
 
   * Rediseño completo tipo Proton VPN.
   * Ventana principal con indicador de estado grande.
@@ -6,13 +19,13 @@ proxy-gui (1.1.0-1) unstable; urgency=medium
   * Acceso a configuración y Acerca de.
   * Sin dependencia de AppIndicator (funciona en COSMIC/Wayland).
 
- -- Marcos Santana <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 15:00:00 -0600
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 15:00:00 -0600
 
-proxy-gui (1.0.0-1) unstable; urgency=medium
+novapm (1.0.0-1) unstable; urgency=medium
 
   * Initial release.
   * System tray indicator with proxy on/off toggle.
   * GTK configuration window.
   * Desktop notifications.
 
- -- Marcos Santana <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 14:00:00 -0600
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Tue, 09 Jun 2026 14:00:00 -0600

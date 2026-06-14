@@ -1,28 +1,31 @@
-Source: proxy-gui
+Source: novapm
 Section: net
 Priority: optional
-Maintainer: Marcos Santana <marcosjaviersantana300302@gmail.com>
+Maintainer: Nexus Develop Company <marcosjaviersantana300302@gmail.com>
 Build-Depends: debhelper-compat (= 13), dh-python, python3-all
 Standards-Version: 4.6.2
-Homepage: https://github.com/marcossd/proxy-gui
+Homepage: https://github.com/Nexus-Develop-Company/NovaProxy-Manager
 
-Package: proxy-gui
+Package: novapm
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends},
  python3-gi,
  python3-gi-cairo,
  gir1.2-gtk-3.0,
-  gir1.2-ayatanaappindicator3-0.1,
-  libayatana-appindicator3-1,
+ gir1.2-ayatanaappindicator3-0.1,
+ libayatana-appindicator3-1,
  libnotify-bin
-Description: Graphical proxy toggle for Linux
- Proxy GUI is a system tray application that allows you to
- easily toggle your proxy settings on and off. It supports
- Basic authentication forwarding via a local Python proxy.
+Description: NovaProxy Manager - Gestor de proxy corporativo
+ NovaProxy Manager es un gestor de proxy corporativo con
+ interfaz gráfica y línea de comandos. Permite activar y
+ desactivar el proxy con un clic y gestionar múltiples
+ perfiles de configuración.
  .
- Features:
-  - System tray icon with on/off status
-  - One-click toggle
-  - Configuration window
-  - Desktop notifications
-  - Auto-start support
+ Características:
+  - Indicador en bandeja del sistema con estado on/off
+  - Toggle de un clic
+  - Ventana de configuración con sidebar
+  - Múltiples perfiles de proxy
+  - Manual de usuario integrado
+  - CLI: novapm on/off/status
+  - Notificaciones de escritorio
