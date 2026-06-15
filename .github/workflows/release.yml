@@ -44,7 +44,9 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/novapm_*.deb
+          files: |
+            dist/novapm_*.deb
+            data/novapm.gpg
           body_path: dist/release-notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,6 +63,7 @@ jobs:
             mkdir -p apt/pool/main/n/novapm apt/dists/stable/main/binary-all
           }
           cp dist/novapm_*.deb /tmp/gh-pages/apt/pool/main/n/novapm/
+          cp data/novapm.gpg /tmp/gh-pages/apt/
           cd /tmp/gh-pages/apt
           dpkg-scanpackages . /dev/null | gzip -9c > dists/stable/main/binary-all/Packages.gz
           cd dists/stable
