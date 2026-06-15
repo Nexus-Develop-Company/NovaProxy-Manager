@@ -69,6 +69,8 @@ jobs:
           mkdir -p dists/stable/main/binary-amd64
           cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
           cd /tmp/gh-pages/apt/dists/stable
+          # Remove stale Release/InRelease/Release.gpg so apt-ftparchive doesn't checksum them
+          rm -f Release InRelease Release.gpg
           {
             echo "Origin: NovaProxy Manager"
             echo "Label: NovaProxy Manager APT Repository"
