@@ -65,7 +65,7 @@ jobs:
           cp dist/novapm_*.deb /tmp/gh-pages/apt/pool/main/n/novapm/
           cp data/novapm.gpg /tmp/gh-pages/apt/
           cd /tmp/gh-pages/apt
-          dpkg-scanpackages . /dev/null | gzip -9c > dists/stable/main/binary-all/Packages.gz
+          dpkg-scanpackages . /dev/null | sed 's|Filename: \./|Filename: |' | gzip -9c > dists/stable/main/binary-all/Packages.gz
           mkdir -p dists/stable/main/binary-amd64
           cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
           cd dists/stable
