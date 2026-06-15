@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt update -qq
+          sudo apt install -y -qq debhelper dh-python python3-all dpkg-dev
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import 2>&1
+          echo "GPG key imported"
+          gpg --list-keys "Nexus Develop Company"
+
+      - name: Build .deb
+        run: |
+          make clean 2>/dev/null || true
+          make deb
+
+      - name: Extract changelog for release notes
+        run: |
+          mkdir -p dist
+          sed -n '/^novapm (/,/^ -- /p' debian/changelog | head -n -1 > dist/release-notes.txt
+          echo "Release notes:"
+          cat dist/release-notes.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/novapm_*.deb
+          body_path: dist/release-notes.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update APT repo
+        run: |
+          git fetch origin gh-pages 2>/dev/null || true
+          rm -rf /tmp/gh-pages
+          git worktree add /tmp/gh-pages gh-pages 2>/dev/null || {
+            mkdir -p /tmp/gh-pages/apt
+            cd /tmp/gh-pages
+            git init
+            git checkout -b gh-pages
+            mkdir -p apt/pool/main/n/novapm apt/dists/stable/main/binary-all
+          }
+          cp dist/novapm_*.deb /tmp/gh-pages/apt/pool/main/n/novapm/
+          cd /tmp/gh-pages/apt
+          dpkg-scanpackages . /dev/null | gzip -9c > dists/stable/main/binary-all/Packages.gz
+          cd dists/stable
+          MD5=$(md5sum main/binary-all/Packages.gz | awk '{print $1}')
+          SHA1=$(sha1sum main/binary-all/Packages.gz | awk '{print $1}')
+          SHA256=$(sha256sum main/binary-all/Packages.gz | awk '{print $1}')
+          SIZE=$(stat -c%s main/binary-all/Packages.gz 2>/dev/null || stat -f%z main/binary-all/Packages.gz)
+          cat > Release << REOF
+Origin: NovaProxy Manager
+Label: NovaProxy Manager APT Repository
+Suite: stable
+Codename: stable
+Architectures: all
+Components: main
+Description: APT repository for NovaProxy Manager
+Date: $(date -Ru)
+MD5Sum:
+ $MD5 $SIZE main/binary-all/Packages.gz
+SHA1:
+ $SHA1 $SIZE main/binary-all/Packages.gz
+SHA256:
+ $SHA256 $SIZE main/binary-all/Packages.gz
+REOF
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
+            --pinentry-mode loopback --clearsign -o InRelease Release 2>&1
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
+            --pinentry-mode loopback --detach-sign -o Release.gpg Release 2>&1
+
+      - name: Push gh-pages
+        run: |
+          cd /tmp/gh-pages
+          git config user.name "Nexus Develop Company"
+          git config user.email "marcosjaviersantana300302@gmail.com"
+          git add -A
+          git commit -m "Auto-release: ${{ github.ref_name }}" 2>/dev/null || echo "Nothing to commit"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git 2>/dev/null || \
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin gh-pages --force 2>&1

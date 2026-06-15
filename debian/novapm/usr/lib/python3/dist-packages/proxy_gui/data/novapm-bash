@@ -1,0 +1,258 @@
+#!/usr/bin/env bash
+# novapm - NovaProxy Manager — unified proxy toggle script
+set -euo pipefail
+
+CONFIG_DIR="${HOME}/.config/proxy"
+CONFIG_FILE="${CONFIG_DIR}/proxy.conf"
+ENV_FILE="${CONFIG_DIR}/env.zsh"
+APT_CONF="/etc/apt/apt.conf.d/50proxy"
+ETC_ENVIRONMENT="/etc/environment"
+PROXY_LOCAL_SERVICE="novapm-local.service"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+sudo_cmd() {
+  if [[ -n "${SUDO_ASKPASS:-}" ]]; then
+    sudo -A "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+usage() {
+    cat <<EOF
+Uso: novapm <comando>
+
+Comandos:
+  on           Activa proxy en todo el sistema
+  off          Desactiva proxy (detiene novapm-local + limpia)
+  apply        Aplica la config actual (tras editar proxy.conf)
+  auto         Detecta si el proxy corporativo responde y configura solo
+  status       Muestra el estado actual del proxy
+  init         Crea proxy.conf con valores por defecto
+
+Proxy local:  http://127.0.0.1:3128 (novapm-local.py)
+EOF
+    exit 1
+}
+
+source_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo -e "${RED}Error:${NC} $CONFIG_FILE no existe."
+        exit 1
+    fi
+    source "$CONFIG_FILE"
+}
+
+cmd_on() {
+    source_config
+
+    local proxy_url="http://${PROXY_HOST}:${PROXY_PORT}"
+
+    echo -e "${GREEN}Activando proxy (novapm-local)...${NC}"
+
+    systemctl --user daemon-reload 2>/dev/null || true
+    systemctl --user start "$PROXY_LOCAL_SERVICE" 2>/dev/null || {
+        echo -e "  ${YELLOW}Fallo systemd, lanzando directo...${NC}"
+        pkill -f novapm-local.py 2>/dev/null || true
+        nohup python3 "$HOME/.local/bin/novapm-local.py" > /dev/null 2>&1 &
+        sleep 1
+    }
+    sleep 1
+    if pgrep -f novapm-local.py &>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} novapm-local corriendo en ${proxy_url}"
+    else
+        echo -e "  ${RED}fallo${NC} novapm-local NO arranco"
+    fi
+
+    cat > "$ENV_FILE" << PROXYEOF
+# Generado por novapm. No editar manualmente.
+export http_proxy="${proxy_url}"
+export https_proxy="${proxy_url}"
+export no_proxy="${NO_PROXY}"
+export HTTP_PROXY="${proxy_url}"
+export HTTPS_PROXY="${proxy_url}"
+export NO_PROXY="${NO_PROXY}"
+PROXYEOF
+    echo -e "  ${GREEN}ok${NC} Shell env: env.zsh"
+
+    printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$proxy_url" "$proxy_url" | sudo_cmd tee "$APT_CONF" > /dev/null
+    echo -e "  ${GREEN}ok${NC} APT: 50proxy"
+
+    git config --global http.proxy "$proxy_url"
+    git config --global https.proxy "$proxy_url"
+    echo -e "  ${GREEN}ok${NC} Git: http.proxy"
+
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.system.proxy mode 'manual' 2>/dev/null || true
+        gsettings set org.gnome.system.proxy.http host "$PROXY_HOST" 2>/dev/null || true
+        gsettings set org.gnome.system.proxy.http port "$PROXY_PORT" 2>/dev/null || true
+        gsettings set org.gnome.system.proxy.https host "$PROXY_HOST" 2>/dev/null || true
+        gsettings set org.gnome.system.proxy.https port "$PROXY_PORT" 2>/dev/null || true
+
+        IFS=',' read -ra HOSTS <<< "$NO_PROXY"
+        local gs_ignore="["
+        for host in "${HOSTS[@]}"; do
+            host="${host## }"
+            host="${host%% }"
+            gs_ignore+="'${host}', "
+        done
+        gs_ignore="${gs_ignore%, }]"
+        gsettings set org.gnome.system.proxy ignore-hosts "$gs_ignore" 2>/dev/null || true
+        echo -e "  ${GREEN}ok${NC} GUI (gsettings): proxy manual -> ${proxy_url}"
+    else
+        echo -e "  ${YELLOW}??${NC} GUI: gsettings no disponible"
+    fi
+
+    sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null || true
+    {
+        printf 'http_proxy="%s"\n' "$proxy_url"
+        printf 'https_proxy="%s"\n' "$proxy_url"
+        printf 'no_proxy="%s"\n' "$NO_PROXY"
+        printf 'HTTP_PROXY="%s"\n' "$proxy_url"
+        printf 'HTTPS_PROXY="%s"\n' "$proxy_url"
+        printf 'NO_PROXY="%s"\n' "$NO_PROXY"
+    } | sudo_cmd tee -a "$ETC_ENVIRONMENT" > /dev/null
+    echo -e "  ${GREEN}ok${NC} System-wide: /etc/environment"
+
+    echo -e "${GREEN}Proxy activado (novapm-local en ${proxy_url})${NC}"
+}
+
+cmd_off() {
+    echo -e "${YELLOW}Desactivando proxy...${NC}"
+
+    systemctl --user stop "$PROXY_LOCAL_SERVICE" 2>/dev/null || true
+    pkill -f novapm-local.py 2>/dev/null || true
+    echo -e "  ${GREEN}ok${NC} novapm-local detenido"
+
+    > "$ENV_FILE"
+    echo -e "  ${GREEN}ok${NC} Shell env limpiado"
+
+    sudo_cmd rm -f "$APT_CONF" 2>/dev/null || true
+    echo -e "  ${GREEN}ok${NC} APT eliminado"
+
+    git config --global --unset http.proxy 2>/dev/null || true
+    git config --global --unset https.proxy 2>/dev/null || true
+    echo -e "  ${GREEN}ok${NC} Git limpiado"
+
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.system.proxy mode 'none' 2>/dev/null || true
+        echo -e "  ${GREEN}ok${NC} GUI (gsettings): desactivado"
+    fi
+
+    sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null || true
+    echo -e "  ${GREEN}ok${NC} System-wide: limpiado"
+
+    unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY 2>/dev/null || true
+
+    echo -e "${GREEN}Proxy desactivado${NC}"
+}
+
+cmd_auto() {
+    source_config
+
+    echo -e "${YELLOW}Probando proxy corporativo en ${UPSTREAM_HOST}:${UPSTREAM_PORT}...${NC}"
+
+    local reachable=false
+    if command -v nc &>/dev/null; then
+        nc -z -w 2 "$UPSTREAM_HOST" "$UPSTREAM_PORT" 2>/dev/null && reachable=true
+    elif command -v timeout &>/dev/null; then
+        timeout 2 bash -c "echo > /dev/tcp/${UPSTREAM_HOST}/${UPSTREAM_PORT}" 2>/dev/null && reachable=true
+    else
+        echo -e "  ${RED}Error:${NC} instala 'netcat' (nc) para auto-deteccion"
+        exit 1
+    fi
+
+    if $reachable; then
+        echo -e "  ${GREEN}Proxy corporativo responde${NC}"
+        cmd_on
+    else
+        echo -e "  ${YELLOW}Proxy corporativo no responde${NC}"
+        cmd_off
+    fi
+}
+
+cmd_status() {
+    echo -e "${YELLOW}Estado del proxy:${NC}"
+
+    if pgrep -f novapm-local.py &>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} novapm-local: corriendo"
+    else
+        echo -e "  ${RED}x${NC} novapm-local: detenido"
+    fi
+
+    if [[ -n "${http_proxy:-}" ]]; then
+        echo -e "  ${GREEN}ok${NC} http_proxy (shell): ${http_proxy}"
+    else
+        echo -e "  ${RED}x${NC} http_proxy (shell): no activa"
+    fi
+
+    gs_mode=$(gsettings get org.gnome.system.proxy mode 2>/dev/null || echo "'none'")
+    if [[ "$gs_mode" != "'none'" ]]; then
+        echo -e "  ${GREEN}ok${NC} GUI (gsettings): $gs_mode"
+    else
+        echo -e "  ${RED}x${NC} GUI (gsettings): no activo"
+    fi
+
+    if git config --global http.proxy &>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} Git: configurado"
+    else
+        echo -e "  ${RED}x${NC} Git: no configurado"
+    fi
+
+    if [[ -f "$APT_CONF" ]]; then
+        echo -e "  ${GREEN}ok${NC} APT: configurado"
+    else
+        echo -e "  ${RED}x${NC} APT: no configurado"
+    fi
+
+    if grep -q '^http_proxy=' "$ETC_ENVIRONMENT" 2>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} System-wide: configurado"
+    else
+        echo -e "  ${RED}x${NC} System-wide: no configurado"
+    fi
+}
+
+cmd_init() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        echo -e "${YELLOW}Ya existe: $CONFIG_FILE${NC}"
+        return
+    fi
+    mkdir -p "$CONFIG_DIR"
+    cat > "$CONFIG_FILE" << 'CONFEOF'
+# ==========================================
+# Configuracion unica de proxy
+# Edita solo este archivo cuando cambien
+# las credenciales o el servidor proxy.
+# Luego ejecuta: novapm apply
+# ==========================================
+
+# Proxy local (novapm-local.py escucha aqui)
+PROXY_HOST="127.0.0.1"
+PROXY_PORT="3128"
+
+# Proxy corporativo upstream
+UPSTREAM_HOST="10.12.0.205"
+UPSTREAM_PORT="3128"
+UPSTREAM_USER=""
+UPSTREAM_PASS=""
+
+# Dominios que NO usan proxy (separados por coma)
+NO_PROXY="localhost,127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,*.local"
+CONFEOF
+    echo -e "${GREEN}Creado: $CONFIG_FILE${NC}"
+    echo "  Editelo y ejecute 'novapm apply'"
+}
+
+case "${1:-}" in
+    on)     cmd_on ;;
+    off)    cmd_off ;;
+    apply)  cmd_on ;;
+    auto)   cmd_auto ;;
+    status) cmd_status ;;
+    init)   cmd_init ;;
+    *)      usage ;;
+esac

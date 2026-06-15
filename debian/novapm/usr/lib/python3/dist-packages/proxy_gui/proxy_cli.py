@@ -15,10 +15,4 @@ def main():
         gui_main()
         return
 
-    cmd = sys.argv[1]
-    if cmd == "uninstall":
-        from .uninstall import run_uninstall
-        run_uninstall()
-        return
-
     os.execv(script, [script] + sys.argv[1:])

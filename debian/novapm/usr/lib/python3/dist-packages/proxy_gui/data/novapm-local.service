@@ -1,0 +1,11 @@
+[Unit]
+Description=Local proxy con Basic auth para proxy corporativo
+After=network.target
+
+[Service]
+ExecStart=%h/.local/bin/novapm-local.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

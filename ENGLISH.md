@@ -69,6 +69,23 @@ Profiles are stored in `~/.config/proxy/profiles.json`.
 
 Check the [Wiki](https://github.com/Nexus-Develop-Company/NovaProxy-Manager/wiki) for detailed documentation: installation, configuration, troubleshooting, and development guide.
 
+## ❌ Uninstall
+
+```bash
+novapm uninstall    # Guided uninstall (automatic)
+```
+
+Or manually based on install method:
+
+| Method | Command |
+|--------|---------|
+| **APT repo** | `sudo apt remove novapm` + `sudo rm /etc/apt/sources.list.d/novapm.list` |
+| **.deb** | `sudo apt remove novapm` |
+| **pipx** | `pipx uninstall novapm` |
+| **install.sh** | `pipx uninstall novapm` |
+
+Configuration files (`~/.config/proxy/`) are automatically removed with `novapm uninstall`.
+
 ## 🛠 Development
 
 ```bash

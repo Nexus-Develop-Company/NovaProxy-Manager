@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
+
+# Automatically added by dh_python3
+if command -v py3compile >/dev/null 2>&1; then
+	py3compile -p novapm 
+fi
+if command -v pypy3compile >/dev/null 2>&1; then
+	pypy3compile -p novapm  || true
+fi
+
+# End automatically added section
+
