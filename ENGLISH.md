@@ -25,29 +25,47 @@
 
 ## ⚡ Quick install
 
-### From .deb
+### 📦 From .deb
+Download the `.deb` file from [GitHub Releases](https://github.com/Nexus-Develop-Company/NovaProxy-Manager/releases)
 ```bash
 sudo apt install ./novapm_1.0.0-1_all.deb
 ```
 
-### From APT repo
+> 💡 If you already cloned the repo, the `.deb` is at `dist/novapm_1.0.0-1_all.deb`
+
+### 📦 From APT repo (recommended)
+
 ```bash
+# 1. Download the GPG key
 sudo mkdir -p /usr/share/keyrings
 sudo curl -fsSLo /usr/share/keyrings/novapm.gpg \
-  https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/data/novapm.gpg
+  https://github.com/Nexus-Develop-Company/NovaProxy-Manager/releases/latest/download/novapm.gpg
+
+# 2. Add the APT repository
 echo "deb [signed-by=/usr/share/keyrings/novapm.gpg] https://nexus-develop-company.github.io/NovaProxy-Manager/apt/ stable main" | sudo tee /etc/apt/sources.list.d/novapm.list
+
+# 3. Install
 sudo apt update
 sudo apt install novapm
 ```
 
-### install.sh script
+> ⚠️ If you are behind a corporate proxy, set `http_proxy` before curl or copy the key from the cloned repo: `sudo cp data/novapm.gpg /usr/share/keyrings/novapm.gpg`
+
+### 📦 install.sh script (automatic)
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/install.sh)
 ```
 
-### pipx
+### 📦 pipx (from GitHub)
 ```bash
 pipx install --system-site-packages git+https://github.com/Nexus-Develop-Company/NovaProxy-Manager.git
+```
+
+### 📦 Build from source
+```bash
+git clone https://github.com/Nexus-Develop-Company/NovaProxy-Manager.git
+cd NovaProxy-Manager
+make install
 ```
 
 ## 🚀 Usage
@@ -71,20 +89,25 @@ Check the [Wiki](https://github.com/Nexus-Develop-Company/NovaProxy-Manager/wiki
 
 ## ❌ Uninstall
 
+### Automatic (recommended)
 ```bash
-novapm uninstall    # Guided uninstall (automatic)
+novapm uninstall
 ```
+Removes everything: pipx, scripts, systemd, configuration, desktop, icons.
 
-Or manually based on install method:
+### Manual by install method
 
 | Method | Command |
 |--------|---------|
-| **APT repo** | `sudo apt remove novapm` + `sudo rm /etc/apt/sources.list.d/novapm.list` |
+| **APT repo** | `sudo apt remove novapm && sudo rm /etc/apt/sources.list.d/novapm.list` |
 | **.deb** | `sudo apt remove novapm` |
 | **pipx** | `pipx uninstall novapm` |
 | **install.sh** | `pipx uninstall novapm` |
 
-Configuration files (`~/.config/proxy/`) are automatically removed with `novapm uninstall`.
+If you uninstalled manually and want to clean config:
+```bash
+rm -rf ~/.config/proxy ~/.local/bin/novapm* ~/.config/systemd/user/novapm*
+```
 
 ## 🛠 Development
 

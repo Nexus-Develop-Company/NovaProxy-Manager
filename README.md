@@ -43,7 +43,7 @@ Elegí el método que prefieras:
 # 1. Descargar la clave GPG
 sudo mkdir -p /usr/share/keyrings
 sudo curl -fsSLo /usr/share/keyrings/novapm.gpg \
-  https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/data/novapm.gpg
+  https://github.com/Nexus-Develop-Company/NovaProxy-Manager/releases/latest/download/novapm.gpg
 
 # 2. Agregar el repositorio
 echo "deb [signed-by=/usr/share/keyrings/novapm.gpg] https://nexus-develop-company.github.io/NovaProxy-Manager/apt/ stable main" | sudo tee /etc/apt/sources.list.d/novapm.list
