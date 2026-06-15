@@ -66,6 +66,7 @@ jobs:
           cp data/novapm.gpg /tmp/gh-pages/apt/
           cd /tmp/gh-pages/apt
           dpkg-scanpackages . /dev/null | gzip -9c > dists/stable/main/binary-all/Packages.gz
+          mkdir -p dists/stable/main/binary-amd64
           cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
           cd dists/stable
           MD5_ALL=$(md5sum main/binary-all/Packages.gz | awk '{print $1}')
