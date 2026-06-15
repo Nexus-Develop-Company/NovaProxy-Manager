@@ -68,22 +68,7 @@ jobs:
           SHA1=$(sha1sum main/binary-all/Packages.gz | awk '{print $1}')
           SHA256=$(sha256sum main/binary-all/Packages.gz | awk '{print $1}')
           SIZE=$(stat -c%s main/binary-all/Packages.gz 2>/dev/null || stat -f%z main/binary-all/Packages.gz)
-          cat > Release << REOF
-Origin: NovaProxy Manager
-Label: NovaProxy Manager APT Repository
-Suite: stable
-Codename: stable
-Architectures: all
-Components: main
-Description: APT repository for NovaProxy Manager
-Date: $(date -Ru)
-MD5Sum:
- $MD5 $SIZE main/binary-all/Packages.gz
-SHA1:
- $SHA1 $SIZE main/binary-all/Packages.gz
-SHA256:
- $SHA256 $SIZE main/binary-all/Packages.gz
-REOF
+          printf 'Origin: NovaProxy Manager\nLabel: NovaProxy Manager APT Repository\nSuite: stable\nCodename: stable\nArchitectures: all\nComponents: main\nDescription: APT repository for NovaProxy Manager\nDate: %s\nMD5Sum:\n %s %s main/binary-all/Packages.gz\nSHA1:\n %s %s main/binary-all/Packages.gz\nSHA256:\n %s %s main/binary-all/Packages.gz\n' "$(date -Ru)" "$MD5" "$SIZE" "$SHA1" "$SIZE" "$SHA256" "$SIZE" > Release
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
             --pinentry-mode loopback --clearsign -o InRelease Release 2>&1
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
