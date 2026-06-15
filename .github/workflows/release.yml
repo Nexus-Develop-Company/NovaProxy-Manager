@@ -68,14 +68,17 @@ jobs:
           dpkg-scanpackages . /dev/null | sed 's|Filename: \./|Filename: |' | gzip -9c > dists/stable/main/binary-all/Packages.gz
           mkdir -p dists/stable/main/binary-amd64
           cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
-          apt-ftparchive -o APT::FTPArchive::Release::Origin="NovaProxy Manager" \
-            -o APT::FTPArchive::Release::Label="NovaProxy Manager APT Repository" \
-            -o APT::FTPArchive::Release::Suite=stable \
-            -o APT::FTPArchive::Release::Codename=stable \
-            -o APT::FTPArchive::Release::Architectures="all amd64" \
-            -o APT::FTPArchive::Release::Components=main \
-            -o APT::FTPArchive::Release::Description="APT repository for NovaProxy Manager" \
-            release . > dists/stable/Release
+          cd /tmp/gh-pages/apt/dists/stable
+          {
+            echo "Origin: NovaProxy Manager"
+            echo "Label: NovaProxy Manager APT Repository"
+            echo "Suite: stable"
+            echo "Codename: stable"
+            echo "Architectures: all amd64"
+            echo "Components: main"
+            echo "Description: APT repository for NovaProxy Manager"
+            apt-ftparchive release .
+          } > Release
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
             --pinentry-mode loopback --clearsign -o InRelease Release 2>&1
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
