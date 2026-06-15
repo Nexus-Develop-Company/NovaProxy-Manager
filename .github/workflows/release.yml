@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update -qq
-          sudo apt install -y -qq debhelper dh-python python3-all dpkg-dev
+          sudo apt install -y -qq build-essential debhelper dh-python python3-all dpkg-dev
 
       - name: Import GPG key
         env:
