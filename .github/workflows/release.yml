@@ -60,18 +60,23 @@ jobs:
             cd /tmp/gh-pages
             git init
             git checkout -b gh-pages
-            mkdir -p apt/pool/main/n/novapm apt/dists/stable/main/binary-all
+            mkdir -p apt/pool/main/n/novapm apt/dists/stable/main/binary-all apt/dists/stable/main/binary-amd64
           }
           cp dist/novapm_*.deb /tmp/gh-pages/apt/pool/main/n/novapm/
           cp data/novapm.gpg /tmp/gh-pages/apt/
           cd /tmp/gh-pages/apt
           dpkg-scanpackages . /dev/null | gzip -9c > dists/stable/main/binary-all/Packages.gz
+          cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
           cd dists/stable
-          MD5=$(md5sum main/binary-all/Packages.gz | awk '{print $1}')
-          SHA1=$(sha1sum main/binary-all/Packages.gz | awk '{print $1}')
-          SHA256=$(sha256sum main/binary-all/Packages.gz | awk '{print $1}')
-          SIZE=$(stat -c%s main/binary-all/Packages.gz 2>/dev/null || stat -f%z main/binary-all/Packages.gz)
-          printf 'Origin: NovaProxy Manager\nLabel: NovaProxy Manager APT Repository\nSuite: stable\nCodename: stable\nArchitectures: all\nComponents: main\nDescription: APT repository for NovaProxy Manager\nDate: %s\nMD5Sum:\n %s %s main/binary-all/Packages.gz\nSHA1:\n %s %s main/binary-all/Packages.gz\nSHA256:\n %s %s main/binary-all/Packages.gz\n' "$(date -Ru)" "$MD5" "$SIZE" "$SHA1" "$SIZE" "$SHA256" "$SIZE" > Release
+          MD5_ALL=$(md5sum main/binary-all/Packages.gz | awk '{print $1}')
+          SHA1_ALL=$(sha1sum main/binary-all/Packages.gz | awk '{print $1}')
+          SHA256_ALL=$(sha256sum main/binary-all/Packages.gz | awk '{print $1}')
+          SIZE_ALL=$(stat -c%s main/binary-all/Packages.gz 2>/dev/null || stat -f%z main/binary-all/Packages.gz)
+          MD5_AMD64=$(md5sum main/binary-amd64/Packages.gz | awk '{print $1}')
+          SHA1_AMD64=$(sha1sum main/binary-amd64/Packages.gz | awk '{print $1}')
+          SHA256_AMD64=$(sha256sum main/binary-amd64/Packages.gz | awk '{print $1}')
+          SIZE_AMD64=$(stat -c%s main/binary-amd64/Packages.gz 2>/dev/null || stat -f%z main/binary-amd64/Packages.gz)
+          printf 'Origin: NovaProxy Manager\nLabel: NovaProxy Manager APT Repository\nSuite: stable\nCodename: stable\nArchitectures: all amd64\nComponents: main\nDescription: APT repository for NovaProxy Manager\nDate: %s\nMD5Sum:\n %s %s main/binary-all/Packages.gz\n %s %s main/binary-amd64/Packages.gz\nSHA1:\n %s %s main/binary-all/Packages.gz\n %s %s main/binary-amd64/Packages.gz\nSHA256:\n %s %s main/binary-all/Packages.gz\n %s %s main/binary-amd64/Packages.gz\n' "$(date -Ru)" "$MD5_ALL" "$SIZE_ALL" "$MD5_AMD64" "$SIZE_AMD64" "$SHA1_ALL" "$SIZE_ALL" "$SHA1_AMD64" "$SIZE_AMD64" "$SHA256_ALL" "$SIZE_ALL" "$SHA256_AMD64" "$SIZE_AMD64" > Release
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
             --pinentry-mode loopback --clearsign -o InRelease Release 2>&1
           echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
