@@ -15,4 +15,15 @@ def main():
         gui_main()
         return
 
+    cmd = sys.argv[1]
+    if cmd == "uninstall":
+        from .uninstall import run_uninstall
+        run_uninstall()
+        return
+
+    if cmd == "update":
+        from .update import run_update
+        run_update()
+        return
+
     os.execv(script, [script] + sys.argv[1:])

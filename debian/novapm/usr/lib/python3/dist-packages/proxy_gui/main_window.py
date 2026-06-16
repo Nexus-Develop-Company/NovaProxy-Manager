@@ -289,6 +289,7 @@ class MainWindow:
         ]
         sub_items = [
             ("📖", "Manual", lambda *a: self._on_manual()),
+            ("🔄", "Actualizar", lambda *a: self._on_update()),
         ]
         for icon, label, cb in items_data:
             btn = Gtk.Button(label=f"{icon}  {label}")
@@ -309,6 +310,12 @@ class MainWindow:
         sep = Gtk.Box()
         sep.set_vexpand(True)
         self.sidebar.pack_start(sep, True, True, 0)
+
+        btn_uninstall = Gtk.Button(label="🗑  Desinstalar")
+        btn_uninstall.get_style_context().add_class("sidebar-item")
+        btn_uninstall.set_halign(Gtk.Align.FILL)
+        btn_uninstall.connect("clicked", lambda *a: (self._toggle_sidebar(), self._on_uninstall()))
+        self.sidebar.pack_start(btn_uninstall, False, False, 0)
 
         btn_quit = Gtk.Button(label="✕  Salir")
         btn_quit.get_style_context().add_class("sidebar-item")
@@ -436,6 +443,14 @@ class MainWindow:
     def _on_manual(self):
         from .manual import show_manual
         show_manual(self.window)
+
+    def _on_update(self):
+        from .update import run_update
+        run_update()
+
+    def _on_uninstall(self):
+        from .uninstall import run_uninstall
+        run_uninstall()
 
     def _on_quit(self):
         proxyctl.run_proxy("off")

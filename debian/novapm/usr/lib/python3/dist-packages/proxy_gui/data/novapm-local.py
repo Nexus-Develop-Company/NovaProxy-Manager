@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Local proxy that adds Basic auth to upstream corporate proxy."""
-import socket, select, base64, sys, os
+import socket, select, base64, sys, os, traceback
 
 CONFIG_FILE = os.path.expanduser("~/.config/proxy/proxy.conf")
+LOG = "/tmp/novapm-local.log"
 
 def load_config():
     cfg = {}
@@ -75,20 +76,24 @@ def handle(client):
             except: pass
 
 def main():
-    cfg = load_config()
-    host = cfg.get("PROXY_HOST", "127.0.0.1")
-    port = int(cfg.get("PROXY_PORT", "3128"))
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((host, port))
-    server.listen(100)
-    print(f"proxy-local: listening on {host}:{port}")
-    sys.stdout.flush()
-    while True:
-        client, _ = server.accept()
-        t = threading.Thread(target=handle, args=(client,))
-        t.daemon = True
-        t.start()
+    try:
+        cfg = load_config()
+        host = cfg.get("PROXY_HOST", "127.0.0.1")
+        port = int(cfg.get("PROXY_PORT", "3128"))
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind((host, port))
+        server.listen(100)
+        print(f"proxy-local: listening on {host}:{port}")
+        sys.stdout.flush()
+        while True:
+            client, _ = server.accept()
+            t = threading.Thread(target=handle, args=(client,))
+            t.daemon = True
+            t.start()
+    except Exception:
+        with open(LOG, "a") as f:
+            f.write(f"[{__file__}] {traceback.format_exc()}\n")
 
 if __name__ == "__main__":
     import threading

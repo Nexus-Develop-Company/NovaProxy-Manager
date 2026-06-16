@@ -1,3 +1,13 @@
+novapm (1.0.4-1) unstable; urgency=medium
+
+  * Auto-update: novapm update + botón en sidebar.
+  * Fix: matar proceso en puerto 3128 con fuser -k.
+  * Fix: try/except en novapm-local.py con log a /tmp/novapm-local.log.
+  * Eliminado APT repo (gh-pages).
+  * release.yml simplificado: solo build .deb + GitHub Release.
+
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Tue, 16 Jun 2026 15:00:00 -0300
+
 novapm (1.0.0-1) unstable; urgency=medium
 
   * Lanzamiento inicial como NovaProxy Manager.

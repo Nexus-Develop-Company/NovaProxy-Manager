@@ -21,4 +21,9 @@ def main():
         run_uninstall()
         return
 
+    if cmd == "update":
+        from .update import run_update
+        run_update()
+        return
+
     os.execv(script, [script] + sys.argv[1:])
