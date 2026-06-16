@@ -8,7 +8,7 @@ de9b74ea6ac0bc5db765555d6f613241  usr/lib/python3/dist-packages/novapm-1.0.4.egg
 5f3763087bf04aadc68cc6baae0add21  usr/lib/python3/dist-packages/proxy_gui/about.py
 d41d8cd98f00b204e9800998ecf8427e  usr/lib/python3/dist-packages/proxy_gui/data/__init__.py
 4627c15cc1022dc00bede7320449d27e  usr/lib/python3/dist-packages/proxy_gui/data/askpass.py
-049ee5acc605dff7d2ee03517908872b  usr/lib/python3/dist-packages/proxy_gui/data/novapm-bash
+bdda0ad26ff3f7638b1e53a2664f4c88  usr/lib/python3/dist-packages/proxy_gui/data/novapm-bash
 ab6fd633255f61903b8cfd9d653d6f71  usr/lib/python3/dist-packages/proxy_gui/data/novapm-local.py
 a6704ce71f7056169b51912087c31e58  usr/lib/python3/dist-packages/proxy_gui/data/novapm-local.service
 a2be2881c6e6eaa1b2e45902bc2015d1  usr/lib/python3/dist-packages/proxy_gui/icons/novapm-off.png
@@ -25,8 +25,8 @@ e527800f69acc0802db3e31b204a7f22  usr/lib/python3/dist-packages/proxy_gui/profil
 ffae53287bb096c2216da4a78bb7ae3a  usr/lib/python3/dist-packages/proxy_gui/proxy_cli.py
 ff4a9783191ae8d0aaa37740516ecbab  usr/lib/python3/dist-packages/proxy_gui/proxyctl.py
 4c81f717d97fed33e484a46e97b1a306  usr/lib/python3/dist-packages/proxy_gui/tray.py
-b0d67a95d9ebf9985df33584338e6c27  usr/lib/python3/dist-packages/proxy_gui/uninstall.py
-30f29fbc129fb9bf818833c059b4d378  usr/lib/python3/dist-packages/proxy_gui/update.py
+399e42a09c0a95b9cef94028690b40fd  usr/lib/python3/dist-packages/proxy_gui/uninstall.py
+2be5e199e88a8442ca2205e078ccc25f  usr/lib/python3/dist-packages/proxy_gui/update.py
 28301660939c621a750fbcb1f4ea6937  usr/lib/python3/dist-packages/proxy_gui/window.py
 caa60889bc15217fef1fa342e4a8f7db  usr/share/applications/novapm.desktop
 f594d060edf3179d1df40c2eb9f522fe  usr/share/doc/novapm/changelog.Debian.gz

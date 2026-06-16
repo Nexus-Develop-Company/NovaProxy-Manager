@@ -54,12 +54,21 @@ cmd_on() {
 
     echo -e "${GREEN}Activando proxy (novapm-local)...${NC}"
 
-    # Kill anything on proxy port (stale systemd, old process, etc.)
+    # 1. Parar y deshabilitar servicio systemd para evitar reinicios automáticos
     systemctl --user stop "$PROXY_LOCAL_SERVICE" 2>/dev/null || true
-    sleep 0.5
-    fuser -k "${PROXY_PORT}/tcp" 2>/dev/null || true
-    sleep 0.5
+    systemctl --user disable "$PROXY_LOCAL_SERVICE" 2>/dev/null || true
+    sleep 1
 
+    # 2. Matar CUALQUIER proceso en el puerto (fuser + pkill como fallback)
+    if command -v fuser &>/dev/null; then
+        fuser -k "${PROXY_PORT}/tcp" 2>/dev/null || true
+    fi
+    pkill -f "novapm-local.py" 2>/dev/null || true
+    pkill -f "proxy-local.py" 2>/dev/null || true
+    sleep 1
+
+    # 3. Habilitar y arrancar servicio systemd
+    systemctl --user enable "$PROXY_LOCAL_SERVICE" 2>/dev/null || true
     systemctl --user daemon-reload 2>/dev/null || true
     systemctl --user start "$PROXY_LOCAL_SERVICE" 2>/dev/null || {
         echo -e "  ${YELLOW}Fallo systemd, lanzando directo...${NC}"
@@ -128,6 +137,8 @@ PROXYEOF
 }
 
 cmd_off() {
+    source_config
+
     echo -e "${YELLOW}Desactivando proxy...${NC}"
 
     systemctl --user stop "$PROXY_LOCAL_SERVICE" 2>/dev/null || true

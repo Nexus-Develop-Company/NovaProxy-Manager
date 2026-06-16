@@ -9,7 +9,12 @@ import tempfile
 import urllib.request
 import urllib.error
 
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
 from . import __version__
+from .proxyctl import parse_config
 
 REPO = "Nexus-Develop-Company/NovaProxy-Manager"
 API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
@@ -23,10 +28,21 @@ def _parse_tag(tag: str) -> tuple:
     return (0, 0, 0)
 
 
+def _make_opener():
+    """Create urllib opener with corporate proxy if configured."""
+    cfg = parse_config()
+    proxy_url = cfg.get("http_proxy") or os.environ.get("http_proxy")
+    if proxy_url:
+        proxy_handler = urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
+        return urllib.request.build_opener(proxy_handler)
+    return urllib.request.build_opener()
+
+
 def _latest_release() -> dict | None:
     try:
         req = urllib.request.Request(API_URL, headers={"Accept": "application/json", "User-Agent": "novapm"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        opener = _make_opener()
+        with opener.open(req, timeout=TIMEOUT) as r:
             return json.loads(r.read().decode())
     except (urllib.error.URLError, json.JSONDecodeError, OSError):
         return None
@@ -55,12 +71,11 @@ def check_update() -> tuple[str, str] | None:
 
 
 def run_update():
-    from gi.repository import Gtk
-
     result = check_update()
     if result is None:
         dialog = Gtk.MessageDialog(
-            transient_for=None, flags=0,
+            parent=None,
+            flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
             message_type=Gtk.MessageType.INFO,
             buttons=Gtk.ButtonsType.OK,
             text="No hay actualizaciones disponibles",
@@ -73,7 +88,8 @@ def run_update():
     latest_ver, deb_url = result
 
     dialog = Gtk.MessageDialog(
-        transient_for=None, flags=0,
+        parent=None,
+        flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
         message_type=Gtk.MessageType.QUESTION,
         buttons=Gtk.ButtonsType.YES_NO,
         text=f"Nueva versión disponible: {latest_ver}",
@@ -89,7 +105,8 @@ def run_update():
         return
 
     progress = Gtk.MessageDialog(
-        transient_for=None, flags=0,
+        parent=None,
+        flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
         message_type=Gtk.MessageType.INFO,
         buttons=Gtk.ButtonsType.NONE,
         text="Descargando actualización...",
@@ -99,7 +116,8 @@ def run_update():
     try:
         deb_path = os.path.join(tempfile.gettempdir(), f"novapm_{latest_ver}.deb")
         req = urllib.request.Request(deb_url, headers={"User-Agent": "novapm"})
-        with urllib.request.urlopen(req, timeout=60) as r:
+        opener = _make_opener()
+        with opener.open(req, timeout=60) as r:
             with open(deb_path, "wb") as f:
                 f.write(r.read())
 
@@ -119,25 +137,29 @@ def run_update():
 
         if result.returncode == 0:
             Gtk.MessageDialog(
-                transient_for=None, flags=0,
+                parent=None,
+                flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
                 message_type=Gtk.MessageType.INFO,
                 buttons=Gtk.ButtonsType.OK,
                 text="Actualización completada",
             ).run()
         else:
             Gtk.MessageDialog(
-                transient_for=None, flags=0,
+                parent=None,
+                flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
                 message_type=Gtk.MessageType.ERROR,
                 buttons=Gtk.ButtonsType.OK,
                 text="Error al instalar",
             ).run()
     except Exception as e:
-        progress.destroy()
+        if progress.get_property("visible"):
+            progress.destroy()
         Gtk.MessageDialog(
-            transient_for=None, flags=0,
+            parent=None,
+            flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
             message_type=Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
-            text=f"Error en la actualización",
+            text="Error en la actualización",
         ).run()
 
     Gtk.main_quit()

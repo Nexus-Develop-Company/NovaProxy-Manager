@@ -5,6 +5,10 @@ import sys
 import subprocess
 import shutil
 
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
 
 CLEANUP_SCRIPT = """#!/usr/bin/env bash
 set -e
@@ -60,11 +64,9 @@ echo "[OK] NovaProxy Manager desinstalado correctamente."
 
 def run_uninstall():
     """Write cleanup script to /tmp and execute it with sudo."""
-    from gi.repository import Gtk, GLib
-
     dialog = Gtk.MessageDialog(
-        transient_for=None,
-        flags=0,
+        parent=None,
+        flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
         message_type=Gtk.MessageType.WARNING,
         buttons=Gtk.ButtonsType.YES_NO,
         text="Desinstalar NovaProxy Manager",
