@@ -33,24 +33,6 @@ sudo apt install ./novapm_1.0.0-1_all.deb
 
 > 💡 If you already cloned the repo, the `.deb` is at `dist/novapm_1.0.0-1_all.deb`
 
-### 📦 From APT repo (recommended)
-
-```bash
-# 1. Download the GPG key
-sudo mkdir -p /usr/share/keyrings
-sudo curl -fsSLo /usr/share/keyrings/novapm.gpg \
-  https://github.com/Nexus-Develop-Company/NovaProxy-Manager/releases/latest/download/novapm.gpg
-
-# 2. Add the APT repository
-echo "deb [signed-by=/usr/share/keyrings/novapm.gpg] https://nexus-develop-company.github.io/NovaProxy-Manager/apt/ stable main" | sudo tee /etc/apt/sources.list.d/novapm.list
-
-# 3. Install
-sudo apt update
-sudo apt install novapm
-```
-
-> ⚠️ If you are behind a corporate proxy, set `http_proxy` before curl or copy the key from the cloned repo: `sudo cp data/novapm.gpg /usr/share/keyrings/novapm.gpg`
-
 ### 📦 install.sh script (automatic)
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Nexus-Develop-Company/NovaProxy-Manager/main/install.sh)
@@ -99,7 +81,6 @@ Removes everything: pipx, scripts, systemd, configuration, desktop, icons.
 
 | Method | Command |
 |--------|---------|
-| **APT repo** | `sudo apt remove novapm && sudo rm /etc/apt/sources.list.d/novapm.list` |
 | **.deb** | `sudo apt remove novapm` |
 | **pipx** | `pipx uninstall novapm` |
 | **install.sh** | `pipx uninstall novapm` |

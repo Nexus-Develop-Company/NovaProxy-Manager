@@ -18,16 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update -qq
-          sudo apt install -y -qq build-essential debhelper dh-python python3-all dpkg-dev apt-utils
-
-      - name: Import GPG key
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import 2>&1
-          echo "GPG key imported"
-          gpg --list-keys "Nexus Develop Company"
+          sudo apt install -y -qq build-essential debhelper dh-python python3-all dpkg-dev
 
       - name: Build .deb
         run: |
@@ -38,61 +29,11 @@ jobs:
         run: |
           mkdir -p dist
           sed -n '/^novapm (/,/^ -- /p' debian/changelog | head -n -1 > dist/release-notes.txt
-          echo "Release notes:"
-          cat dist/release-notes.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/novapm_*.deb
-            data/novapm.gpg
+          files: dist/novapm_*.deb
           body_path: dist/release-notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update APT repo
-        run: |
-          git fetch origin gh-pages 2>/dev/null || true
-          rm -rf /tmp/gh-pages
-          git worktree add /tmp/gh-pages gh-pages 2>/dev/null || {
-            mkdir -p /tmp/gh-pages/apt
-            cd /tmp/gh-pages
-            git init
-            git checkout -b gh-pages
-            mkdir -p apt/pool/main/n/novapm apt/dists/stable/main/binary-all apt/dists/stable/main/binary-amd64
-          }
-          cp dist/novapm_*.deb /tmp/gh-pages/apt/pool/main/n/novapm/
-          cp data/novapm.gpg /tmp/gh-pages/apt/
-          cd /tmp/gh-pages/apt
-          dpkg-scanpackages . /dev/null | sed 's|Filename: \./|Filename: |' | gzip -9c > dists/stable/main/binary-all/Packages.gz
-          mkdir -p dists/stable/main/binary-amd64
-          cp dists/stable/main/binary-all/Packages.gz dists/stable/main/binary-amd64/Packages.gz
-          cd /tmp/gh-pages/apt/dists/stable
-          # Remove stale Release/InRelease/Release.gpg so apt-ftparchive doesn't checksum them
-          rm -f Release InRelease Release.gpg
-          {
-            echo "Origin: NovaProxy Manager"
-            echo "Label: NovaProxy Manager APT Repository"
-            echo "Suite: stable"
-            echo "Codename: stable"
-            echo "Architectures: all amd64"
-            echo "Components: main"
-            echo "Description: APT repository for NovaProxy Manager"
-            apt-ftparchive release .
-          } > Release
-          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
-            --pinentry-mode loopback --clearsign -o InRelease Release 2>&1
-          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 \
-            --pinentry-mode loopback --detach-sign -o Release.gpg Release 2>&1
-
-      - name: Push gh-pages
-        run: |
-          cd /tmp/gh-pages
-          git config user.name "Nexus Develop Company"
-          git config user.email "marcosjaviersantana300302@gmail.com"
-          git add -A
-          git commit -m "Auto-release: ${{ github.ref_name }}" 2>/dev/null || echo "Nothing to commit"
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git 2>/dev/null || \
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push origin gh-pages --force 2>&1

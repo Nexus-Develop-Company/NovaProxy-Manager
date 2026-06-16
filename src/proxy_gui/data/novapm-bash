@@ -58,7 +58,7 @@ cmd_on() {
     systemctl --user start "$PROXY_LOCAL_SERVICE" 2>/dev/null || {
         echo -e "  ${YELLOW}Fallo systemd, lanzando directo...${NC}"
         pkill -f novapm-local.py 2>/dev/null || true
-        nohup python3 "$HOME/.local/bin/novapm-local.py" > /dev/null 2>&1 &
+        nohup python3 "$HOME/.local/bin/novapm-local.py" >> /tmp/novapm-local.log 2>&1 &
         sleep 1
     }
     sleep 1
@@ -66,6 +66,7 @@ cmd_on() {
         echo -e "  ${GREEN}ok${NC} novapm-local corriendo en ${proxy_url}"
     else
         echo -e "  ${RED}fallo${NC} novapm-local NO arranco"
+        echo -e "  ${YELLOW}Log:${NC} cat /tmp/novapm-local.log"
     fi
 
     cat > "$ENV_FILE" << PROXYEOF
