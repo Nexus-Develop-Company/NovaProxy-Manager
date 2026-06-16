@@ -54,11 +54,17 @@ cmd_on() {
 
     echo -e "${GREEN}Activando proxy (novapm-local)...${NC}"
 
-    # Kill anything on proxy port (stale systemd, old process, etc.)
+    # 1. Detener servicio systemd y esperar
     systemctl --user stop "$PROXY_LOCAL_SERVICE" 2>/dev/null || true
-    sleep 0.5
-    fuser -k "${PROXY_PORT}/tcp" 2>/dev/null || true
-    sleep 0.5
+    sleep 1
+
+    # 2. Matar cualquier proceso en el puerto (usando fuser y pkill como fallback)
+    if command -v fuser &>/dev/null; then
+        fuser -k "${PROXY_PORT}/tcp" 2>/dev/null || true
+    fi
+    pkill -f "novapm-local.py" 2>/dev/null || true
+    pkill -f "proxy-local.py" 2>/dev/null || true
+    sleep 1
 
     systemctl --user daemon-reload 2>/dev/null || true
     systemctl --user start "$PROXY_LOCAL_SERVICE" 2>/dev/null || {
