@@ -1,3 +1,15 @@
+novapm (1.0.5-1) unstable; urgency=medium
+
+  * Auto-update: novapm update + botón en sidebar.
+  * Fix: matar proceso en puerto 3128 con fuser -k + disable/enable systemd.
+  * Fix: try/except en novapm-local.py con log a /tmp/novapm-local.log.
+  * Fix: novapm-off con source_config + GTK 3.0 compat.
+  * Fix: novapm update/uninstall GTK 3.0 compat (sin main_quit sin loop).
+  * Eliminado APT repo (gh-pages).
+  * release.yml simplificado: solo build .deb + GitHub Release.
+
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Tue, 16 Jun 2026 16:00:00 -0300
+
 novapm (1.0.4-1) unstable; urgency=medium
 
   * Auto-update: novapm update + botón en sidebar.

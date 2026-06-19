@@ -106,6 +106,8 @@ def write_config(values: dict) -> None:
 
 def run_proxy(command: str) -> tuple[bool, str]:
     """Run proxy on/off/auto/status and return (success, output)."""
+    ensure_files()
+
     if not PROXY_SCRIPT.exists():
         return False, f"Script not found: {PROXY_SCRIPT}"
 

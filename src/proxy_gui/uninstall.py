@@ -111,5 +111,4 @@ def run_uninstall():
     # If we're still alive, the pipx uninstall probably failed; force pipx removal
     subprocess.run(["pipx", "uninstall", "novapm"], capture_output=True)
 
-    Gtk.main_quit()
-    sys.exit(0)
+    return

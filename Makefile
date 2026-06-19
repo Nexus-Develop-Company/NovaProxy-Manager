@@ -2,7 +2,7 @@
 
 PREFIX ?= /usr/local
 APP = novapm
-VERSION = 1.0.0
+VERSION := $(shell head -1 debian/changelog | sed -n 's/.*(\(.*\)).*/\1/p' | cut -d- -f1)
 
 install:
 	sudo apt install -y gir1.2-ayatanaappindicator3-0.1 libayatana-appindicator3-1 2>/dev/null; \
@@ -14,7 +14,7 @@ install-system:
 	pip install .
 	install -Dm644 data/novapm.desktop $(DESTDIR)$(PREFIX)/share/applications/novapm.desktop
 	# Install app icons to hicolor theme (PNG for all standard sizes)
-	for dir in $$(ls data/icons/hicolor); do \
+	for dir in $$(ls data/icons/hicolor); do
 	  install -Dm644 data/icons/hicolor/$$dir/apps/novapm.png \
 	    $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm.png; \
 	done
@@ -35,10 +35,10 @@ uninstall:
 	pip uninstall -y $(APP)
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/novapm.desktop
 	# Remove all hicolor icon sizes
-	for dir in 16x16 22x22 24x24 32x32 48x48 64x64 72x72 96x96 128x128 256x256 512x512; do \
-	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm.png; \
-	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm-on.png; \
-	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm-off.png; \
+	for dir in 16x16 22x22 24x24 32x32 48x48 64x64 72x72 96x96 128x128 256x256 512x512; do
+	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm.png;
+	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm-on.png;
+	  rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$$dir/apps/novapm-off.png;
 	done
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/novapm.svg
 	rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/novapm-on.svg

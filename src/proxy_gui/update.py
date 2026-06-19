@@ -162,5 +162,4 @@ def run_update():
             text="Error en la actualización",
         ).run()
 
-    Gtk.main_quit()
-    sys.exit(0)
+    return
