@@ -1,3 +1,28 @@
+novapm (1.0.6-1) unstable; urgency=medium
+
+  * Fix cmd_off(): env.zsh ahora escribe 'unset' en vez de truncar vacío.
+  * Fix cmd_off(): '/etc/environment' se limpia con sudo — ahora detecta
+    fallo y muestra comando manual.
+  * Fix cmd_off(): después de limpiar, explica que las vars ya están en
+    memoria RAM de la sesión; el cambio en /etc/environment solo afecta
+    nuevos inicios de sesión.
+  * Fix cmd_off(): instrucciones corregidas: 'source env.zsh' para cada
+    terminal activa, o cerrar sesión para limpiar todo.
+  * Fix cmd_on(): sudo fallos ahora son detectados — si no se pudo escribir
+    en /etc/environment o APT, muestra error con comando manual.
+  * Fix cmd_on(): grep patrón corregido ('novapm.env.zsh' → '# NovaProxy
+    Manager') para evitar duplicados en .zshrc/.bashrc cada vez que se
+    ejecuta 'novapm on'.
+  * Fix cmd_on(): se asegura que /etc/environment se reescriba completo
+    (sed + tee) con el NO_PROXY actual de proxy.conf.
+  * Fix cmd_on(): normaliza no_proxy para compatibilidad con curl —
+    '*.dominio' se convierte a '.dominio' en env.zsh y /etc/environment
+    (curl no soporta * en no_proxy). Gsettings mantiene '*.dominio'.
+  * Fix cmd_on(): apt proxy ahora incluye UPSTREAM_USER:UPSTREAM_PASS
+    en la URL (http://user:pass@127.0.0.1:3128) para evitar 407.
+
+ -- Nexus Develop Company <marcosjaviersantana300302@gmail.com>  Fri, 19 Jun 2026 18:00:00 -0300
+
 novapm (1.0.5-1) unstable; urgency=medium
 
   * Auto-update: novapm update + botón en sidebar.

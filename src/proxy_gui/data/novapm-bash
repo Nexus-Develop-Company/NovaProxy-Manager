@@ -52,6 +52,10 @@ cmd_on() {
 
     local proxy_url="http://${PROXY_HOST}:${PROXY_PORT}"
 
+    # Normalizar no_proxy: *.dominio → .dominio (curl no entiende * en no_proxy)
+    local env_no_proxy
+    env_no_proxy="$(echo "$NO_PROXY" | sed 's/\*\././g')"
+
     echo -e "${GREEN}Activando proxy (novapm-local)...${NC}"
 
     # 1. Parar y deshabilitar servicio systemd para evitar reinicios automáticos
@@ -87,15 +91,20 @@ cmd_on() {
 # Generado por novapm. No editar manualmente.
 export http_proxy="${proxy_url}"
 export https_proxy="${proxy_url}"
-export no_proxy="${NO_PROXY}"
+export no_proxy="${env_no_proxy}"
 export HTTP_PROXY="${proxy_url}"
 export HTTPS_PROXY="${proxy_url}"
-export NO_PROXY="${NO_PROXY}"
+export NO_PROXY="${env_no_proxy}"
 PROXYEOF
     echo -e "  ${GREEN}ok${NC} Shell env: env.zsh"
 
-    printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$proxy_url" "$proxy_url" | sudo_cmd tee "$APT_CONF" > /dev/null 2>&1 || true
-    echo -e "  ${GREEN}ok${NC} APT: 50proxy"
+    local apt_url="http://${UPSTREAM_USER}:${UPSTREAM_PASS}@${PROXY_HOST}:${PROXY_PORT}"
+    if printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$apt_url" "$apt_url" | sudo_cmd tee "$APT_CONF" > /dev/null 2>&1; then
+        echo -e "  ${GREEN}ok${NC} APT: 50proxy"
+    else
+        echo -e "  ${RED}!!${NC} No se pudo escribir $APT_CONF (sudo requerido)"
+        echo -e "  ${YELLOW}  Ejecuta:${NC}  sudo tee $APT_CONF"
+    fi
 
     git config --global http.proxy "$proxy_url"
     git config --global https.proxy "$proxy_url"
@@ -122,20 +131,24 @@ PROXYEOF
         echo -e "  ${YELLOW}??${NC} GUI: gsettings no disponible"
     fi
 
-    sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null || true
-    {
-        printf 'http_proxy="%s"\n' "$proxy_url"
-        printf 'https_proxy="%s"\n' "$proxy_url"
-        printf 'no_proxy="%s"\n' "$NO_PROXY"
-        printf 'HTTP_PROXY="%s"\n' "$proxy_url"
-        printf 'HTTPS_PROXY="%s"\n' "$proxy_url"
-        printf 'NO_PROXY="%s"\n' "$NO_PROXY"
-    } | sudo_cmd tee -a "$ETC_ENVIRONMENT" > /dev/null 2>&1 || true
-    echo -e "  ${GREEN}ok${NC} System-wide: /etc/environment"
+    if sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null &&
+       {
+           printf 'http_proxy="%s"\n' "$proxy_url"
+           printf 'https_proxy="%s"\n' "$proxy_url"
+           printf 'no_proxy="%s"\n' "$env_no_proxy"
+           printf 'HTTP_PROXY="%s"\n' "$proxy_url"
+           printf 'HTTPS_PROXY="%s"\n' "$proxy_url"
+           printf 'NO_PROXY="%s"\n' "$env_no_proxy"
+       } | sudo_cmd tee -a "$ETC_ENVIRONMENT" > /dev/null 2>&1; then
+        echo -e "  ${GREEN}ok${NC} System-wide: /etc/environment"
+    else
+        echo -e "  ${RED}!!${NC} No se pudo escribir en /etc/environment (sudo requerido)"
+        echo -e "  ${YELLOW}  Ejecuta luego:${NC}  novapm on (después de sudo)"
+    fi
 
     # Auto-source env.zsh en ~/.zshrc y ~/.bashrc para nuevos terminales
     for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
-        if [[ -f "$rc" ]] && ! grep -q "novapm.env.zsh" "$rc" 2>/dev/null; then
+        if [[ -f "$rc" ]] && ! grep -q "# NovaProxy Manager" "$rc" 2>/dev/null; then
             echo '' >> "$rc"
             echo '# NovaProxy Manager — auto-activado' >> "$rc"
             echo '[[ -f ~/.config/proxy/env.zsh ]] && source ~/.config/proxy/env.zsh' >> "$rc"
@@ -155,11 +168,19 @@ cmd_off() {
     fuser -k "${PROXY_PORT}/tcp" 2>/dev/null || true
     echo -e "  ${GREEN}ok${NC} novapm-local detenido"
 
-    > "$ENV_FILE"
-    echo -e "  ${GREEN}ok${NC} Shell env limpiado"
+    cat > "$ENV_FILE" << 'UNSETEOF'
+# Proxy desactivado por novapm — source para limpiar vars
+unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY
+echo "[novapm] Variables de proxy limpias"
+UNSETEOF
+    echo -e "  ${GREEN}ok${NC} Shell env limpiado (source para aplicar)"
 
-    sudo_cmd rm -f "$APT_CONF" 2>/dev/null || true
-    echo -e "  ${GREEN}ok${NC} APT eliminado"
+    if sudo_cmd rm -f "$APT_CONF" 2>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} APT eliminado"
+    else
+        echo -e "  ${RED}!!${NC} No se pudo limpiar APT (sudo requerido)"
+        echo -e "  ${YELLOW}  Ejecuta manualmente:${NC}  sudo rm -f $APT_CONF"
+    fi
 
     git config --global --unset http.proxy 2>/dev/null || true
     git config --global --unset https.proxy 2>/dev/null || true
@@ -170,8 +191,13 @@ cmd_off() {
         echo -e "  ${GREEN}ok${NC} GUI (gsettings): desactivado"
     fi
 
-    sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null || true
-    echo -e "  ${GREEN}ok${NC} System-wide: limpiado"
+    if sudo_cmd sed -i -E '/^(export )?(http_proxy|https_proxy|no_proxy|HTTP_PROXY|HTTPS_PROXY|NO_PROXY)=/d' "$ETC_ENVIRONMENT" 2>/dev/null; then
+        echo -e "  ${GREEN}ok${NC} System-wide: limpiado"
+    else
+        echo -e "  ${RED}!!${NC} No se pudo limpiar $ETC_ENVIRONMENT (sudo requerido)"
+        echo -e "  ${YELLOW}  Ejecuta manualmente:${NC}"
+        echo -e "    sudo sed -i '/http_proxy\\|https_proxy\\|no_proxy\\|HTTP_PROXY\\|HTTPS_PROXY\\|NO_PROXY=/d' $ETC_ENVIRONMENT"
+    fi
 
     unset http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY 2>/dev/null || true
 
@@ -182,6 +208,24 @@ cmd_off() {
         fi
     done
 
+    # Verificar que /etc/environment quedó realmente limpio
+    if grep -Eq '^http_proxy=|^https_proxy=|^HTTP_PROXY=|^HTTPS_PROXY=' "$ETC_ENVIRONMENT" 2>/dev/null; then
+        echo -e "  ${RED}!!${NC} /etc/environment AÚN tiene variables proxy"
+        echo -e "  ${YELLOW}  Limpialo manualmente:${NC}"
+        echo -e "    sudo sed -i '/http_proxy\\|https_proxy\\|no_proxy\\|HTTP_PROXY\\|HTTPS_PROXY\\|NO_PROXY=/d' $ETC_ENVIRONMENT"
+    fi
+
+    echo ""
+    echo -e "  ${YELLOW}╔═══ LIMPIEZA INCOMPLETA ═══╗${NC}"
+    echo -e "  ${YELLOW}║${NC} Las variables de esta sesión YA están en memoria.${NC}"
+    echo -e "  ${YELLOW}║${NC} Editar /etc/environment solo afecta futuros inicios.${NC}"
+    echo -e "  ${YELLOW}╚═══════════════════════════╝${NC}"
+    echo ""
+    echo -e "  ${GREEN}Para cada terminal abierta:${NC}"
+    echo -e "    source ~/.config/proxy/env.zsh"
+    echo -e "  ${GREEN}Para limpiar TODO (sesión completa):${NC}"
+    echo -e "    cerrar sesión y volver a iniciar"
+    echo ""
     echo -e "${GREEN}Proxy desactivado${NC}"
 }
 
